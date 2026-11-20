@@ -1,0 +1,7 @@
+# Solo la portada es indexable. Los canales (/abc) no tienen nada que indexar: lo que se
+# escribe no pasa por el servidor y se borra a los 60 segundos.
+User-agent: *
+Allow: /$
+Disallow: /
+
+Sitemap: https://efimeral.dotrino.com/sitemap.xml

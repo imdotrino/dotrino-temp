@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Efimeral">
+<meta name="theme-color" content="#00658c">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="icon" type="image/svg+xml" href="/icon.svg">
+<link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png">
+<link rel="apple-touch-icon" href="/icon-192.png">
+<title>Efimeral — chat que se borra solo</title>
+<meta name="description" content="Un chat sin cuenta y sin historial. Elige un canal de hasta 3 caracteres, escribe, y cada mensaje se borra a los 60 segundos. Solo ves cuántas personas hay conectadas." />
+<link rel="canonical" href="https://efimeral.dotrino.com/" />
+<meta property="og:type" content="website" />
+<meta property="og:locale" content="es_ES" />
+<meta property="og:locale:alternate" content="en_US" />
+<meta property="og:site_name" content="Dotrino" />
+<meta property="og:title" content="Efimeral" />
+<meta property="og:description" content="Chat sin cuenta ni historial: canales de hasta 3 caracteres y mensajes que se borran a los 60 segundos." />
+<meta property="og:url" content="https://efimeral.dotrino.com/" />
+<meta property="og:image" content="https://efimeral.dotrino.com/og.jpg" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="Efimeral" />
+<meta name="twitter:description" content="Chat sin cuenta ni historial: canales de hasta 3 caracteres y mensajes que se borran a los 60 segundos." />
+<meta name="twitter:image" content="https://efimeral.dotrino.com/og.jpg" />
+<!-- Analítica cookieless autohosteada (GoatCounter); no cuenta en localhost/LAN.
+     Solo cuenta la cáscara: el canal (la ruta) no se manda. -->
+<script>window.goatcounter={path:function(){return location.hostname+'/'}}</script>
+<script data-goatcounter="https://goat.dotrino.com/count" async src="https://goat.dotrino.com/count.js"></script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "Efimeral",
+  "url": "https://efimeral.dotrino.com/",
+  "description": "Chat sin cuenta ni historial: canales de hasta 3 caracteres y mensajes que se borran a los 60 segundos.",
+  "applicationCategory": "CommunicationApplication",
+  "operatingSystem": "Web",
+  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+  "publisher": { "@type": "Organization", "name": "Dotrino", "url": "https://dotrino.com/" }
+}
+</script>
+</head>
+<body>
+  <div id="app"></div>
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>
