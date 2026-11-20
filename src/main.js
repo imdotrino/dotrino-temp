@@ -116,6 +116,10 @@ function renderRoom (name) {
   const composer = h('form', { class: 'composer' }, input, sendBtn)
   main.replaceChildren(h('section', { class: 'room' }, h('div', { class: 'room-head' }, status, otherBtn), alertBox, notice, empty, list, composer))
 
+  /** @type {Awaited<ReturnType<typeof joinRoom>> | null} */
+  let room = null
+  /** Mensajes en pantalla: id → cómo reiniciar su reloj y su barra. @type {Map<string, { li: HTMLElement, reset: () => void, resendBtn: HTMLElement | null }>} */
+  const shown = new Map()
   /** @type {'connecting'|'online'|'offline'|'error'} */
   let state = 'connecting'
   let count = 0
@@ -130,6 +134,7 @@ function renderRoom (name) {
     sendBtn.toggleAttribute('disabled', state !== 'online' || pendingJoin())
     alertBox.hidden = !pendingJoin()
     if (pendingJoin()) alertText.textContent = t('joinedAlert', count)
+    paintResend()
   }
   ackBtn.addEventListener('click', () => { acked = count; paintStatus(); input.focus() })
   /** @type {ReturnType<typeof setTimeout> | null} */
@@ -154,8 +159,6 @@ function renderRoom (name) {
   repaint()
   paintEmpty()
 
-  /** @type {Set<string>} */
-  const seen = new Set()
   /** @param {HTMLElement} li */
   const append = (li) => {
     const atBottom = list.scrollHeight - list.scrollTop - list.clientHeight < 40
@@ -163,13 +166,28 @@ function renderRoom (name) {
     if (atBottom || li.classList.contains('mine')) list.scrollTop = list.scrollHeight
     paintEmpty()
     // A los 60 segundos se borra del DOM, y con él la única copia que existía.
-    setTimeout(() => { li.remove(); paintEmpty() }, TTL_MS)
+    let timer = setTimeout(() => { li.remove(); paintEmpty() }, TTL_MS)
+    /** Vuelve a empezar los 60 segundos (al reenviarlo). */
+    return () => {
+      clearTimeout(timer)
+      timer = setTimeout(() => { li.remove(); paintEmpty() }, TTL_MS)
+    }
+  }
+  /** El botón de reenviar de cada mensaje mío: visible si hay conectados que no lo tienen. */
+  function paintResend () {
+    for (const [id, s] of shown) {
+      if (!s.resendBtn) continue
+      const n = room ? room.missing(id) : 0
+      s.resendBtn.hidden = n === 0
+      s.resendBtn.textContent = t('resend', n)
+      s.resendBtn.toggleAttribute('disabled', pendingJoin() || state !== 'online')
+    }
   }
   /** @param {import('./room.js').Msg} m */
   const addMessage = (m) => {
-    if (seen.has(m.id)) return
-    seen.add(m.id)
-    setTimeout(() => seen.delete(m.id), TTL_MS)
+    // Ya lo tengo: es un reenvío. No se repite, solo vuelve a empezar su reloj.
+    const already = shown.get(m.id)
+    if (already) { already.reset(); return }
     const bar = h('span', { class: 'ttl' })
     bar.style.animationDuration = TTL_MS + 'ms'
     const copyBtn = h('button', {
@@ -183,19 +201,45 @@ function renderRoom (name) {
         setTimeout(() => { copyBtn.innerHTML = ICON_COPY; copyBtn.classList.remove('done') }, 1500)
       }).catch((e) => { console.warn('[efimeral] copy failed:', e?.message); showNotice(t('copyFailed')) })
     })
+    const resendBtn = m.mine
+      ? h('button', { class: 'resend', type: 'button', 'data-testid': 'resend-btn', hidden: true })
+      : null
     const li = h('li', {
       class: 'msg' + (m.mine ? ' mine' : ''), 'data-testid': 'message', 'data-msg-id': m.id,
-    }, h('span', { class: 'text', text: m.text }), copyBtn, bar)
+    }, h('div', { class: 'body' }, h('span', { class: 'text', text: m.text }), copyBtn), ...(resendBtn ? [resendBtn] : []), bar)
     if (!m.mine) li.style.setProperty('--who', String(hue(m.from)))
-    append(li)
+    const resetTimer = append(li)
+    const reset = () => {
+      resetTimer()
+      // La barra vuelve a llenarse: reiniciar la animación.
+      bar.style.animation = 'none'
+      void bar.offsetWidth
+      bar.style.animation = ''
+      bar.style.animationDuration = TTL_MS + 'ms'
+    }
+    shown.set(m.id, { li, reset, resendBtn })
+    setTimeout(function drop () {
+      // Si se reinició, el li sigue en el DOM: se mira otra vez cuando le toque.
+      if (li.isConnected) { setTimeout(drop, 1000); return }
+      shown.delete(m.id)
+    }, TTL_MS)
+    if (resendBtn) {
+      resendBtn.addEventListener('click', () => {
+        if (!room || acked === null || pendingJoin()) return
+        reset()
+        room.resend(m.id, acked).catch((err) => {
+          if (err?.code === 'new-member') { paintStatus(); return }
+          console.error('[efimeral] resend failed:', err?.code || err?.message)
+        })
+      })
+    }
+    paintResend()
   }
   /** @param {'joinedLine'|'leftLine'} key @param {number} n */
   const addSystem = (key, n) => {
     append(h('li', { class: 'sys' + (key === 'joinedLine' ? ' in' : ''), 'data-testid': 'system-line', text: t(key, n) }))
   }
 
-  /** @type {Awaited<ReturnType<typeof joinRoom>> | null} */
-  let room = null
   joinRoom(name, {
     onMessage: addMessage,
     onCount: (n) => {
@@ -212,7 +256,8 @@ function renderRoom (name) {
       paintStatus()
     },
     onNotice: (k, n) => showNotice(t(k, n)),
-  }).then((r) => { room = r }).catch((e) => {
+    onDelivered: () => paintResend(),
+  }).then((r) => { room = r; paintResend() }).catch((e) => {
     console.error('[efimeral] connect failed:', e?.code || e?.message)
     state = 'error'
     paintStatus()

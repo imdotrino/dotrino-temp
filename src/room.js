@@ -46,6 +46,7 @@ setKeypairStore({ get: () => memoryPair, set: (p) => { memoryPair = p } })
  *   onCount: (n: number) => void,
  *   onStatus: (s: 'connecting'|'online'|'offline'|'error') => void,
  *   onNotice: (k: 'notDelivered'|'oldVersion', n?: number) => void,
+ *   onDelivered: (id: string) => void,
  * }} Handlers
  */
 
@@ -54,10 +55,22 @@ setKeypairStore({ get: () => memoryPair, set: (p) => { memoryPair = p } })
  * @param {Handlers} h
  */
 export async function joinRoom (name, h) {
+  /** Mis mensajes vivos: a quién le llegó cada uno. @type {Map<string, { text: string, recipients: Set<string>, timer: ReturnType<typeof setTimeout> }>} */
+  const sent = new Map()
+  const newMember = () => Object.assign(new Error('someone joined'), { code: 'new-member' })
+  /** @param {string} id */
+  const expireLater = (id) => {
+    const e = sent.get(id)
+    if (!e) return
+    clearTimeout(e.timer)
+    e.timer = setTimeout(() => sent.delete(id), TTL_MS)
+  }
+  /** @type {WebSocketProxyClient} */
+  let client
   const channel = CHANNEL_PREFIX + name
   const enc = await makeEncKeypair()
   const publickey = await getPublicKeyJwk()
-  const client = new WebSocketProxyClient({
+  client = new WebSocketProxyClient({
     requireSealed: true,
     myEncPub: enc.encPub,
     myEncPrivateKey: enc.privateKey,
@@ -124,6 +137,27 @@ export async function joinRoom (name, h) {
 
   const logFail = (/** @type {string} */ what) => (/** @type {any} */ e) =>
     console.warn(`[efimeral] ${what} failed:`, e?.code || e?.message)
+  /**
+   * Manda un mensaje mío a todos los conectados de ahora y apunta a quién le llegó.
+   * @param {string} id
+   */
+  const deliver = async (id) => {
+    const e = sent.get(id)
+    if (!e) return
+    const payload = { t: 'efm', v: MINE, id, text: e.text }
+    const others = [...members].filter((tk) => tk !== client.token)
+    const results = await Promise.allSettled(others.map(async (tk) => {
+      const peerPubkey = client.pubkeyOfToken(tk) || await client.whoIs(tk, 5000)
+      if (!peerPubkey) throw Object.assign(new Error('no identity'), { code: 'no-peer-identity' })
+      await client.sendSealedTo(tk, payload, { peerPubkey })
+      e.recipients.add(tk)
+    }))
+    const failed = results.filter((r) => r.status === 'rejected')
+    for (const f of failed) console.warn('[efimeral] not delivered:', /** @type {any} */ (f).reason?.code || /** @type {any} */ (f).reason?.message)
+    if (failed.length) h.onNotice('notDelivered', failed.length)
+    h.onDelivered(id)
+  }
+
   timers.push(setInterval(() => { if (client.token) client.publish(channel).catch(logFail('republish')) }, REPUBLISH_MS))
   timers.push(setInterval(() => { if (client.token) refresh().catch(logFail('relist')) }, RELIST_MS))
 
@@ -139,19 +173,38 @@ export async function joinRoom (name, h) {
     async send (text, seen) {
       const clean = text.trim().slice(0, MAX_TEXT)
       if (!clean) return
-      if (members.size > seen) throw Object.assign(new Error('someone joined'), { code: 'new-member' })
+      if (members.size > seen) throw newMember()
       const id = crypto.randomUUID()
       h.onMessage({ id, text: clean, from: client.token || '', mine: true, at: Date.now() })
-      const payload = { t: 'efm', v: MINE, id, text: clean }
-      const others = [...members].filter((tk) => tk !== client.token)
-      const results = await Promise.allSettled(others.map(async (tk) => {
-        const peerPubkey = client.pubkeyOfToken(tk) || await client.whoIs(tk, 5000)
-        if (!peerPubkey) throw Object.assign(new Error('no identity'), { code: 'no-peer-identity' })
-        await client.sendSealedTo(tk, payload, { peerPubkey })
-      }))
-      const failed = results.filter((r) => r.status === 'rejected')
-      for (const f of failed) console.warn('[efimeral] not delivered:', /** @type {any} */ (f).reason?.code || /** @type {any} */ (f).reason?.message)
-      if (failed.length) h.onNotice('notDelivered', failed.length)
+      const entry = { text: clean, recipients: new Set(), timer: setTimeout(() => {}, 0) }
+      sent.set(id, entry)
+      expireLater(id)
+      await deliver(id)
+    },
+
+    /**
+     * Cuántos de los conectados de ahora no tienen este mensaje mío (entraron después, o
+     * no les llegó). 0 si el mensaje ya caducó.
+     * @param {string} id
+     */
+    missing (id) {
+      const e = sent.get(id)
+      if (!e) return 0
+      return [...members].filter((tk) => tk !== client.token && !e.recipients.has(tk)).length
+    },
+
+    /**
+     * REENVIAR a los que no lo tienen. Sale a todos los de ahora con el mismo id: quien ya
+     * lo tenía no lo ve dos veces, solo se le reinicia el reloj. Los 60 segundos vuelven a
+     * empezar para todos, también para mi copia.
+     * @param {string} id
+     * @param {number} seen cuántos conectados ha visto el usuario
+     */
+    async resend (id, seen) {
+      if (!sent.has(id)) return
+      if (members.size > seen) throw newMember()
+      expireLater(id)
+      await deliver(id)
     },
     leave () {
       for (const tm of timers) clearInterval(tm)

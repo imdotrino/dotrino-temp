@@ -26,6 +26,7 @@ const STRINGS = {
     leftLine: (n) => (n === 1 ? 'Salió alguien · solo tú' : `Salió alguien · ${n} conectados`),
     copy: 'Copiar',
     copyFailed: 'No se pudo copiar.',
+    resend: (n) => (n === 1 ? 'Reenviar a 1 nuevo' : `Reenviar a ${n} nuevos`),
   },
   en: {
     channelLabel: 'Channel',
@@ -50,6 +51,7 @@ const STRINGS = {
     leftLine: (n) => (n === 1 ? 'Someone left · only you' : `Someone left · ${n} online`),
     copy: 'Copy',
     copyFailed: 'Could not copy.',
+    resend: (n) => (n === 1 ? 'Resend to 1 new' : `Resend to ${n} new`),
   },
 }
 

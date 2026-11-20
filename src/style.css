@@ -80,3 +80,14 @@ body {
 }
 .copy:hover, .copy:focus-visible { opacity: 1; background: rgb(127 127 127 / .15); }
 .copy.done { opacity: 1; }
+
+/* Reenviar a los que entraron después. */
+.msg { flex-direction: column; align-items: stretch; gap: 6px; }
+.msg .body { display: flex; align-items: flex-start; gap: 8px; }
+.resend {
+  align-self: flex-end; font: inherit; font-size: 12px; font-weight: 700; cursor: pointer;
+  border: 1px solid currentColor; border-radius: var(--dt-radius-pill); padding: 3px 10px;
+  background: transparent; color: inherit;
+}
+.resend[hidden] { display: none; }
+.resend[disabled] { opacity: .5; cursor: not-allowed; }
