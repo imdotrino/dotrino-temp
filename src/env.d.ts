@@ -2,7 +2,7 @@
 // La versión de esta build, la escribe vite.config.js (`define`).
 declare const __APP_VERSION__: string
 
-// @dotrino/compat 0.5.1 no publica tipos: aquí va lo que Efimeral usa.
+// @dotrino/compat 0.5.1 no publica tipos: aquí va lo que Temp usa.
 declare module '@dotrino/compat' {
   export interface Declaration { product: string, version: string, protocol: number, speaks: number[] }
   export interface BrokenEntry { product: string, versions: string | string[], why?: string, fix?: string }

@@ -17,7 +17,7 @@ function commitMeta () {
   }
 }
 
-// El canal va en la ruta (efimeral.dotrino.com/abc). Pages no sabe de rutas: lo que no
+// El canal va en la ruta (temp.dotrino.com/abc). Pages no sabe de rutas: lo que no
 // existe lo sirve su 404.html, así que el 404 es la misma app.
 function spaFallback () {
   return {
@@ -30,7 +30,7 @@ function spaFallback () {
 }
 
 export default defineConfig({
-  plugins: [prerender({ links: [{ href: 'https://wiki.dotrino.com/apps/efimeral/', text: 'Cómo se usa Efimeral' }] }), commitMeta(), spaFallback()],
+  plugins: [prerender({ links: [{ href: 'https://wiki.dotrino.com/apps/temp/', text: 'Cómo se usa Temp' }] }), commitMeta(), spaFallback()],
   // base '/' y no './': la app se sirve también desde /abc, y ahí una ruta relativa
   // buscaría los assets en el sitio equivocado.
   base: '/',

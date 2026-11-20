@@ -1,7 +1,7 @@
 {
-  "name": "dotrino-efimeral",
+  "name": "dotrino-temp",
   "private": true,
-  "version": "0.1.0",
+  "version": "0.2.0",
   "type": "module",
   "description": "Chat efímero del ecosistema Dotrino: sin cuenta, canales de hasta 3 caracteres, mensajes que se borran a los 60 segundos.",
   "scripts": {

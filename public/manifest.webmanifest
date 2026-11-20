@@ -1,6 +1,6 @@
 {
-  "name": "Efimeral — Dotrino",
-  "short_name": "Efimeral",
+  "name": "Temp — Dotrino",
+  "short_name": "Temp",
   "description": "Chat sin cuenta ni historial: canales de hasta 3 caracteres y mensajes que se borran a los 60 segundos.",
   "start_url": "/",
   "scope": "/",

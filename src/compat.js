@@ -5,13 +5,13 @@
  * bloquea: si alguien habla otra versión, se avisa en el canal y el mensaje se enseña
  * igual.
  *
- * Protocolo 1: `{ t: 'efm', v, id, text }`, sellado por el transporte.
+ * Protocolo 1: `{ t: 'tmp', v, id, text }`, sellado por el transporte.
  */
 import { declare, check } from '@dotrino/compat'
 
 /* global __APP_VERSION__ */
 export const MINE = declare({
-  product: 'efimeral',
+  product: 'temp',
   version: __APP_VERSION__,
   protocol: 1,
   speaks: [1],
@@ -32,7 +32,7 @@ export function compatible (theirs) {
   try {
     return check({ mine: MINE, theirs, broken: BROKEN }).compatible
   } catch (e) {
-    console.warn('[efimeral] unreadable version declaration:', /** @type {Error} */ (e).message)
+    console.warn('[temp] unreadable version declaration:', /** @type {Error} */ (e).message)
     return false
   }
 }

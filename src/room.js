@@ -1,5 +1,5 @@
 /**
- * Un canal de Efimeral sobre el pilar de transporte (@dotrino/proxy-client).
+ * Un canal de Temp sobre el pilar de transporte (@dotrino/proxy-client).
  *
  * SIN CUENTA Y SIN NADA GUARDADO. Cada pestaña inventa al abrir dos llaves que viven solo
  * en memoria: una de firma (el proxio la pide para publicarse en un canal e identificarse)
@@ -25,7 +25,7 @@ const REPUBLISH_MS = 10 * 60_000
 // Red de seguridad del contador: los eventos joined/left lo llevan en tiempo real, y esto
 // corrige lo que se haya perdido en una reconexión.
 const RELIST_MS = 30_000
-const CHANNEL_PREFIX = 'efimeral_'
+const CHANNEL_PREFIX = 'temp_'
 
 /** @param {string} raw */
 export function normalizeChannel (raw) {
@@ -104,7 +104,7 @@ export async function joinRoom (name, h) {
       await refresh()
       h.onStatus('online')
     } catch (e) {
-      console.error('[efimeral] join failed:', /** @type {any} */ (e)?.code || /** @type {Error} */ (e).message)
+      console.error('[temp] join failed:', /** @type {any} */ (e)?.code || /** @type {Error} */ (e).message)
       h.onStatus('error')
     }
   }
@@ -124,19 +124,19 @@ export async function joinRoom (name, h) {
   }
   client.on('channel_left', (ch, tk) => gone(tk, ch))
   client.on('peer_disconnected', (tk, ch) => gone(tk, ch))
-  client.on('error', (e) => console.warn('[efimeral] transport:', e?.code || e?.type || e?.error))
+  client.on('error', (e) => console.warn('[temp] transport:', e?.code || e?.type || e?.error))
 
   client.on('message', (from, payload, meta) => {
     // El pilar es el único que abre el sobre; aquí solo se comprueba que venía sellado.
     if (!meta?.sealed) return
     const m = typeof payload === 'string' ? safeParse(payload) : payload
-    if (!m || m.t !== 'efm' || typeof m.text !== 'string' || typeof m.id !== 'string') return
+    if (!m || m.t !== 'tmp' || typeof m.text !== 'string' || typeof m.id !== 'string') return
     if (!compatible(m.v) && !warnedVersion) { warnedVersion = true; h.onNotice('oldVersion') }
     h.onMessage({ id: m.id, text: m.text.slice(0, MAX_TEXT), from, mine: false, at: Date.now() })
   })
 
   const logFail = (/** @type {string} */ what) => (/** @type {any} */ e) =>
-    console.warn(`[efimeral] ${what} failed:`, e?.code || e?.message)
+    console.warn(`[temp] ${what} failed:`, e?.code || e?.message)
   /**
    * Manda un mensaje mío a todos los conectados de ahora y apunta a quién le llegó.
    * @param {string} id
@@ -144,7 +144,7 @@ export async function joinRoom (name, h) {
   const deliver = async (id) => {
     const e = sent.get(id)
     if (!e) return
-    const payload = { t: 'efm', v: MINE, id, text: e.text }
+    const payload = { t: 'tmp', v: MINE, id, text: e.text }
     const others = [...members].filter((tk) => tk !== client.token)
     const results = await Promise.allSettled(others.map(async (tk) => {
       const peerPubkey = client.pubkeyOfToken(tk) || await client.whoIs(tk, 5000)
@@ -153,7 +153,7 @@ export async function joinRoom (name, h) {
       e.recipients.add(tk)
     }))
     const failed = results.filter((r) => r.status === 'rejected')
-    for (const f of failed) console.warn('[efimeral] not delivered:', /** @type {any} */ (f).reason?.code || /** @type {any} */ (f).reason?.message)
+    for (const f of failed) console.warn('[temp] not delivered:', /** @type {any} */ (f).reason?.code || /** @type {any} */ (f).reason?.message)
     if (failed.length) h.onNotice('notDelivered', failed.length)
     h.onDelivered(id)
   }

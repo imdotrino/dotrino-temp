@@ -1,15 +1,15 @@
-# Efimeral
+# Temp
 
-**https://efimeral.dotrino.com/**
+**https://temp.dotrino.com/**
 
 Un chat sin cuenta y sin historial. Entras a un canal de hasta 3 letras o números
-(`efimeral.dotrino.com/abc`), escribes, y cada mensaje se borra a los 60 segundos. Solo ves
+(`temp.dotrino.com/abc`), escribes, y cada mensaje se borra a los 60 segundos. Solo ves
 cuántas personas hay conectadas.
 
 Sirve para pasarse algo que hay que copiar —un código, un enlace, una clave— entre dos
 aparatos o dos personas, sin dejarlo guardado en ningún sitio.
 
-Cómo se usa: [wiki.dotrino.com/apps/efimeral](https://wiki.dotrino.com/apps/efimeral/).
+Cómo se usa: [wiki.dotrino.com/apps/temp](https://wiki.dotrino.com/apps/temp/).
 
 ## Cómo funciona
 

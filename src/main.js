@@ -7,7 +7,7 @@ import { t, getLang, setLang } from './i18n.js'
 import { joinRoom, normalizeChannel, TTL_MS, MAX_TEXT } from './room.js'
 
 const app = document.getElementById('app')
-if (!app) throw new Error('efimeral: #app is missing from index.html')
+if (!app) throw new Error('temp: #app is missing from index.html')
 
 setLang(getLang())
 
@@ -40,12 +40,12 @@ const askedInvalid = location.pathname.length > 1 && !channel
 const topbar = h('dotrino-topbar', {
   profile: true,
   theme: true,
-  brand: channel ? 'Efimeral /' + channel : 'Efimeral',
+  brand: channel ? 'Temp /' + channel : 'Temp',
   icon: '/icon.svg',
   'brand-href': '/',
   'no-back': true,
   'support-href': 'https://ko-fi.com/dotrino',
-  'support-repo': 'imdotrino/dotrino-efimeral',
+  'support-repo': 'imdotrino/dotrino-temp',
   'support-discord': 'https://discord.gg/D648uq7cth',
 })
 const main = h('main', { class: 'view' })
@@ -81,7 +81,7 @@ function renderHome () {
   })
   const enterBtn = h('button', { class: 'btn primary', type: 'submit', 'data-testid': 'enter-btn' })
   const randomBtn = h('button', { class: 'btn', type: 'button', 'data-testid': 'random-btn', onclick: () => go(randomChannel()) })
-  const prefix = h('span', { class: 'prefix', text: 'efimeral.dotrino.com/' })
+  const prefix = h('span', { class: 'prefix', text: 'temp.dotrino.com/' })
   form.append(h('div', { class: 'channel-row' }, prefix, input), h('div', { class: 'row' }, enterBtn, randomBtn), msg)
   main.replaceChildren(form)
   repaint = () => {
@@ -199,7 +199,7 @@ function renderRoom (name) {
         copyBtn.innerHTML = ICON_CHECK
         copyBtn.classList.add('done')
         setTimeout(() => { copyBtn.innerHTML = ICON_COPY; copyBtn.classList.remove('done') }, 1500)
-      }).catch((e) => { console.warn('[efimeral] copy failed:', e?.message); showNotice(t('copyFailed')) })
+      }).catch((e) => { console.warn('[temp] copy failed:', e?.message); showNotice(t('copyFailed')) })
     })
     const resendBtn = m.mine
       ? h('button', { class: 'resend', type: 'button', 'data-testid': 'resend-btn', hidden: true })
@@ -229,7 +229,7 @@ function renderRoom (name) {
         reset()
         room.resend(m.id, acked).catch((err) => {
           if (err?.code === 'new-member') { paintStatus(); return }
-          console.error('[efimeral] resend failed:', err?.code || err?.message)
+          console.error('[temp] resend failed:', err?.code || err?.message)
         })
       })
     }
@@ -258,7 +258,7 @@ function renderRoom (name) {
     onNotice: (k, n) => showNotice(t(k, n)),
     onDelivered: () => paintResend(),
   }).then((r) => { room = r; paintResend() }).catch((e) => {
-    console.error('[efimeral] connect failed:', e?.code || e?.message)
+    console.error('[temp] connect failed:', e?.code || e?.message)
     state = 'error'
     paintStatus()
   })
@@ -271,7 +271,7 @@ function renderRoom (name) {
     // instante, no sale y el texto se queda en la caja.
     room.send(text, acked).then(() => { input.value = '' }).catch((err) => {
       if (err?.code === 'new-member') { paintStatus(); return }
-      console.error('[efimeral] send failed:', err?.code || err?.message)
+      console.error('[temp] send failed:', err?.code || err?.message)
     })
   })
   window.addEventListener('pagehide', () => room?.leave())
@@ -293,7 +293,7 @@ function hue (s) {
 if ('serviceWorker' in navigator && !import.meta.env.DEV) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('/sw.js').then((reg) => {
-      setInterval(() => reg.update().catch((e) => console.warn('[efimeral] sw update failed:', e?.message)), 30 * 60_000)
-    }).catch((e) => console.warn('[efimeral] sw register failed:', e?.message))
+      setInterval(() => reg.update().catch((e) => console.warn('[temp] sw update failed:', e?.message)), 30 * 60_000)
+    }).catch((e) => console.warn('[temp] sw register failed:', e?.message))
   })
 }

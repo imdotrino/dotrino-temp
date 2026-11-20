@@ -4,4 +4,4 @@ User-agent: *
 Allow: /$
 Disallow: /
 
-Sitemap: https://efimeral.dotrino.com/sitemap.xml
+Sitemap: https://temp.dotrino.com/sitemap.xml

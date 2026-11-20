@@ -5,7 +5,7 @@
 // ámbito genérico de un worker, así que se dice aquí una vez.
 const sw = /** @type {ServiceWorkerGlobalScope} */ (/** @type {unknown} */ (self));
 
-const CACHE = 'efimeral-v1';
+const CACHE = 'temp-v1';
 const ASSETS = [
   '/',
   '/index.html',
