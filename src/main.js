@@ -38,11 +38,11 @@ const channel = normalizeChannel(decodeURIComponent(location.pathname.slice(1)))
 const askedInvalid = location.pathname.length > 1 && !channel
 
 const topbar = h('dotrino-topbar', {
-  brand: channel ? `Efimeral /${channel}` : 'Efimeral',
-  icon: '/icon.svg',
-  'brand-href': '/',
   profile: true,
   theme: true,
+  brand: channel ? 'Efimeral /' + channel : 'Efimeral',
+  icon: '/icon.svg',
+  'brand-href': '/',
   'no-back': true,
   'support-href': 'https://ko-fi.com/dotrino',
   'support-repo': 'imdotrino/dotrino-efimeral',

@@ -30,7 +30,7 @@ function spaFallback () {
 }
 
 export default defineConfig({
-  plugins: [prerender(), commitMeta(), spaFallback()],
+  plugins: [prerender({ links: [{ href: 'https://wiki.dotrino.com/apps/efimeral/', text: 'Cómo se usa Efimeral' }] }), commitMeta(), spaFallback()],
   // base '/' y no './': la app se sirve también desde /abc, y ahí una ruta relativa
   // buscaría los assets en el sitio equivocado.
   base: '/',

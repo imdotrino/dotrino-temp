@@ -9,6 +9,8 @@ cuántas personas hay conectadas.
 Sirve para pasarse algo que hay que copiar —un código, un enlace, una clave— entre dos
 aparatos o dos personas, sin dejarlo guardado en ningún sitio.
 
+Cómo se usa: [wiki.dotrino.com/apps/efimeral](https://wiki.dotrino.com/apps/efimeral/).
+
 ## Cómo funciona
 
 - **Sin cuenta.** Cada pestaña crea al abrirse sus llaves, que viven solo en memoria. Al
@@ -16,7 +18,9 @@ aparatos o dos personas, sin dejarlo guardado en ningún sitio.
   navegador.
 - **60 segundos.** Cada mensaje se borra de la pantalla a los 60 segundos de llegar. No hay
   más copia que esa.
-- **Nada se reenvía.** Quien entra ve lo que se escriba desde ese momento, nada de antes.
+- **Nada queda para después.** Quien entra ve lo que se escriba desde ese momento. Para
+  pasarle un mensaje anterior, su autor lo reenvía (**Reenviar a N nuevos**), y los 60
+  segundos vuelven a empezar.
 - **Sellado.** Cada mensaje sale cifrado para cada persona del canal. El servidor de
   transporte (`proxy.dotrino.com`) lo pasa pero no puede leerlo.
 - **Saber quién lee.** El canal lo lee cualquiera que sepa su nombre. Por eso, si entra
