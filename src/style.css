@@ -91,3 +91,10 @@ body {
 }
 .resend[hidden] { display: none; }
 .resend[disabled] { opacity: .5; cursor: not-allowed; }
+
+/* Quién está: cada persona con su apodo y el código de su cuenta. */
+.people { list-style: none; margin: 8px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; }
+.person { font-size: 12px; padding: 3px 9px; border-radius: 999px; background: var(--dt-surface-2); border: 1px solid var(--dt-line); color: var(--dt-text); }
+.person.me { border-color: var(--dt-accent); }
+.person.unverified { color: var(--dt-text-faint); font-style: italic; }
+.person.new { border-color: var(--dt-error); color: var(--dt-error); }

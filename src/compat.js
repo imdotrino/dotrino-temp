@@ -5,7 +5,8 @@
  * bloquea: si alguien habla otra versión, se avisa en el canal y el mensaje se enseña
  * igual.
  *
- * Protocolo 1: `{ t: 'tmp', v, id, text }`, sellado por el transporte.
+ * Protocolo 1: `{ t: 'tmp', v, id, text }` (un mensaje) y `{ t: 'tmp-who', v, nick, proof }`
+ * (presentarse: apodo y firma de la cuenta), los dos sellados por el transporte.
  */
 import { declare, check } from '@dotrino/compat'
 

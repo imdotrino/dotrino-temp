@@ -1,8 +1,10 @@
 import '@dotrino/theme/theme.css'
 import './style.css'
 // Barra superior estándar (§5): marca, idioma, tema, perfil y la moneda de support en un
-// solo componente. Sin bóveda: el botón de perfil abre el menú con los enlaces.
+// solo componente.
 import '@dotrino/topbar'
+import { Identity } from '@dotrino/identity'
+import { Store } from '@dotrino/store'
 import { t, getLang, setLang } from './i18n.js'
 import { joinRoom, normalizeChannel, TTL_MS, MAX_TEXT } from './room.js'
 
@@ -50,6 +52,16 @@ const topbar = h('dotrino-topbar', {
 })
 const main = h('main', { class: 'view' })
 app.append(topbar, main)
+
+// LA CUENTA DE DOTRINO (se crea sola la primera vez). Sin ella no hay a quién atribuir lo
+// que se dice en un canal, así que si no carga, el canal no abre y se dice.
+const identityReady = Identity.connect()
+identityReady.then((identity) => {
+  /** @type {any} */ (topbar).identity = identity
+  // §4: el store abierto con la cuenta, y la barra enseña su respaldo. Temp no guarda
+  // nada en él: los mensajes no se guardan en ningún sitio.
+  return Store.connect({ identity }).then((store) => { /** @type {any} */ (topbar).store = store })
+}).catch((e) => console.error('[temp] account or store unavailable:', e?.code || e?.message))
 
 // El idioma lo cambia el topbar: se repinta lo que dependa del texto.
 /** @type {() => void} */
@@ -102,6 +114,7 @@ function renderRoom (name) {
   const list = h('ol', { class: 'messages', 'data-testid': 'messages' })
   const empty = h('p', { class: 'empty', 'data-testid': 'empty' })
   const notice = h('p', { class: 'notice', 'data-testid': 'notice', hidden: true })
+  const peopleEl = h('ul', { class: 'people', 'data-testid': 'people' })
   // EL AVISO DE QUE ENTRÓ ALGUIEN. La seguridad del canal es saber quién lo lee: si sube
   // el número de conectados, no se puede enviar nada hasta haberlo visto.
   const alertText = h('span', { 'data-testid': 'join-alert-text' })
@@ -114,7 +127,7 @@ function renderRoom (name) {
   const sendBtn = h('button', { class: 'btn primary', type: 'submit', 'data-testid': 'send-btn', disabled: true })
   const otherBtn = h('a', { class: 'other', href: '/', 'data-testid': 'other-channel' })
   const composer = h('form', { class: 'composer' }, input, sendBtn)
-  main.replaceChildren(h('section', { class: 'room' }, h('div', { class: 'room-head' }, status, otherBtn), alertBox, notice, empty, list, composer))
+  main.replaceChildren(h('section', { class: 'room' }, h('div', { class: 'room-head' }, status, otherBtn), peopleEl, alertBox, notice, empty, list, composer))
 
   /** @type {Awaited<ReturnType<typeof joinRoom>> | null} */
   let room = null
@@ -122,21 +135,32 @@ function renderRoom (name) {
   const shown = new Map()
   /** @type {'connecting'|'online'|'offline'|'error'} */
   let state = 'connecting'
-  let count = 0
-  // Cuántos conectados ha visto el usuario. `null` hasta la primera lista: lo que hay al
-  // entrar ya está a la vista en el contador antes de escribir nada.
-  /** @type {number | null} */
+  /** Quién está ahora. @type {import('./room.js').Person[]} */
+  let people = []
+  // A quién ha visto el usuario. `null` hasta la primera lista: lo que hay al entrar ya
+  // está a la vista antes de escribir nada. Se cuenta por persona y no por número: si uno
+  // sale y otro entra a la vez, el número no cambia pero el que lee sí.
+  /** @type {Set<string> | null} */
   let acked = null
-  const pendingJoin = () => acked !== null && count > acked
+  const newcomers = () => acked === null ? [] : people.filter((p) => !acked?.has(p.token))
+  const pendingJoin = () => newcomers().length > 0
+  const paintPeople = () => {
+    peopleEl.replaceChildren(...people.map((p) => h('li', {
+      class: 'person' + (p.me ? ' me' : '') + (p.verified ? '' : ' unverified') + (acked && !acked.has(p.token) ? ' new' : ''),
+      'data-testid': 'person',
+      text: p.me ? t('you') + ' · ' + p.label : who(p),
+    })))
+  }
   const paintStatus = () => {
     status.className = 'status ' + state + (pendingJoin() ? ' alert' : '')
-    status.textContent = state === 'online' ? t('online', count) : t(state === 'error' ? 'error' : state)
+    status.textContent = state === 'online' ? t('online', people.length) : t(state === 'error' ? 'error' : state)
     sendBtn.toggleAttribute('disabled', state !== 'online' || pendingJoin())
     alertBox.hidden = !pendingJoin()
-    if (pendingJoin()) alertText.textContent = t('joinedAlert', count)
+    if (pendingJoin()) alertText.textContent = t('joinedAlert', newcomers().map(who).join(', '), people.length)
+    paintPeople()
     paintResend()
   }
-  ackBtn.addEventListener('click', () => { acked = count; paintStatus(); input.focus() })
+  ackBtn.addEventListener('click', () => { acked = new Set(people.map((p) => p.token)); paintStatus(); input.focus() })
   /** @type {ReturnType<typeof setTimeout> | null} */
   let noticeTimer = null
   /** @param {string} text */
@@ -235,29 +259,43 @@ function renderRoom (name) {
     }
     paintResend()
   }
-  /** @param {'joinedLine'|'leftLine'} key @param {number} n */
-  const addSystem = (key, n) => {
-    append(h('li', { class: 'sys' + (key === 'joinedLine' ? ' in' : ''), 'data-testid': 'system-line', text: t(key, n) }))
+  /** Las líneas «Entró…» abiertas, para ponerles el nombre cuando se presente. @type {Map<string, { li: HTMLElement, n: number }>} */
+  const joinLines = new Map()
+  /** @param {'joinedLine'|'leftLine'} key @param {import('./room.js').Person} p @param {number} n */
+  const addSystem = (key, p, n) => {
+    const li = h('li', { class: 'sys' + (key === 'joinedLine' ? ' in' : ''), 'data-testid': 'system-line', text: t(key, who(p), n) })
+    append(li)
+    if (key === 'joinedLine') joinLines.set(p.token, { li, n })
+    else joinLines.delete(p.token)
   }
 
-  joinRoom(name, {
+  identityReady.then((identity) => joinRoom(name, identity, {
     onMessage: addMessage,
-    onCount: (n) => {
-      if (acked !== null && n > count) addSystem('joinedLine', n)
-      if (acked !== null && n < count) addSystem('leftLine', n)
-      count = n
-      // Si alguien se fue, lo visto sigue valiendo para los que quedan.
-      if (acked !== null && count < acked) acked = count
+    onMembers: (list) => {
+      people = list
+      paintStatus()
+    },
+    onJoin: (p) => {
+      if (acked !== null) addSystem('joinedLine', p, people.length + 1)
+    },
+    onLeave: (p) => {
+      if (acked !== null) addSystem('leftLine', p, people.length - 1)
+      // Lo visto sigue valiendo para los que quedan.
+      acked?.delete(p.token)
+    },
+    onPeer: (p) => {
+      const line = joinLines.get(p.token)
+      if (line) line.li.textContent = t('joinedLine', who(p), line.n)
       paintStatus()
     },
     onStatus: (s) => {
       state = s
-      if (s === 'online' && acked === null) acked = count
+      if (s === 'online' && acked === null) acked = new Set(people.map((p) => p.token))
       paintStatus()
     },
     onNotice: (k, n) => showNotice(t(k, n)),
     onDelivered: () => paintResend(),
-  }).then((r) => { room = r; paintResend() }).catch((e) => {
+  })).then((r) => { room = r; paintResend() }).catch((e) => {
     console.error('[temp] connect failed:', e?.code || e?.message)
     state = 'error'
     paintStatus()
@@ -280,6 +318,17 @@ function renderRoom (name) {
 
 const ICON_COPY = '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>'
 const ICON_CHECK = '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>'
+
+/**
+ * Cómo se nombra a alguien: su apodo y el código de su cuenta, comprobado con su firma.
+ * Mientras no se ha presentado (o si su firma no cuadra) es «alguien»: nunca se le pone un
+ * nombre que no ha probado.
+ * @param {import('./room.js').Person} p
+ */
+function who (p) {
+  if (!p.verified) return t('someone')
+  return (p.nick || t('noNick')) + ' · ' + p.label
+}
 
 /** Un color por remitente, para seguir la conversación sin nombres. @param {string} s */
 function hue (s) {

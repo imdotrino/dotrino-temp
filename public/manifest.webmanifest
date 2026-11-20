@@ -1,7 +1,7 @@
 {
   "name": "Temp — Dotrino",
   "short_name": "Temp",
-  "description": "Chat sin cuenta ni historial: canales de hasta 3 caracteres y mensajes que se borran a los 60 segundos.",
+  "description": "Chat sin registro ni historial: canales de hasta 3 caracteres, mensajes que se borran a los 60 segundos, y ves quién está.",
   "start_url": "/",
   "scope": "/",
   "launch_handler": { "client_mode": "focus-existing" },

@@ -2,6 +2,9 @@
 // elección en 'dotrino.lang', la clave compartida del ecosistema, y avisa con el
 // evento `dotrino-lang`. Aquí solo se lee y se sigue.
 
+/** @param {string} s */
+const cap = (s) => s.charAt(0).toUpperCase() + s.slice(1)
+
 const STRINGS = {
   es: {
     channelLabel: 'Canal',
@@ -20,10 +23,13 @@ const STRINGS = {
     notDelivered: (/** @type {number} */ n) => (n === 1 ? 'No le llegó a 1 persona.' : `No les llegó a ${n} personas.`),
     oldVersion: 'Alguien en el canal usa otra versión de Temp; puede que no se lean bien.',
     error: 'No se pudo conectar.',
-    joinedAlert: (/** @type {number} */ n) => `Entró alguien. Ahora hay ${n} conectados. Revisa antes de enviar.`,
+    joinedAlert: (/** @type {string} */ who, /** @type {number} */ n) => `Entró ${who}. Ahora hay ${n} conectados. Revisa antes de enviar.`,
     ack: 'Entendido',
-    joinedLine: (/** @type {number} */ n) => `Entró alguien · ${n} conectados`,
-    leftLine: (/** @type {number} */ n) => (n === 1 ? 'Salió alguien · solo tú' : `Salió alguien · ${n} conectados`),
+    joinedLine: (/** @type {string} */ who, /** @type {number} */ n) => `Entró ${who} · ${n} conectados`,
+    leftLine: (/** @type {string} */ who, /** @type {number} */ n) => (n === 1 ? `Salió ${who} · solo tú` : `Salió ${who} · ${n} conectados`),
+    someone: 'alguien sin verificar',
+    noNick: 'Sin apodo',
+    you: 'Tú',
     copy: 'Copiar',
     copyFailed: 'No se pudo copiar.',
     resend: (/** @type {number} */ n) => (n === 1 ? 'Reenviar a 1 nuevo' : `Reenviar a ${n} nuevos`),
@@ -45,10 +51,13 @@ const STRINGS = {
     notDelivered: (/** @type {number} */ n) => (n === 1 ? '1 person did not get it.' : `${n} people did not get it.`),
     oldVersion: 'Someone in this channel runs another version of Temp; you may not read each other well.',
     error: 'Could not connect.',
-    joinedAlert: (/** @type {number} */ n) => `Someone joined. There are now ${n} online. Check before sending.`,
+    joinedAlert: (/** @type {string} */ who, /** @type {number} */ n) => `${cap(who)} joined. There are now ${n} online. Check before sending.`,
     ack: 'Got it',
-    joinedLine: (/** @type {number} */ n) => `Someone joined · ${n} online`,
-    leftLine: (/** @type {number} */ n) => (n === 1 ? 'Someone left · only you' : `Someone left · ${n} online`),
+    joinedLine: (/** @type {string} */ who, /** @type {number} */ n) => `${cap(who)} joined · ${n} online`,
+    leftLine: (/** @type {string} */ who, /** @type {number} */ n) => (n === 1 ? `${cap(who)} left · only you` : `${cap(who)} left · ${n} online`),
+    someone: 'someone unverified',
+    noNick: 'No nickname',
+    you: 'You',
     copy: 'Copy',
     copyFailed: 'Could not copy.',
     resend: (/** @type {number} */ n) => (n === 1 ? 'Resend to 1 new' : `Resend to ${n} new`),
