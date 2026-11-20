@@ -37,7 +37,7 @@ export function normalizeChannel (raw) {
 // y la misma pestaña sería reconocible al volver.
 /** @type {any} */
 let memoryPair = null
-setKeypairStore({ get: () => memoryPair, set: (p) => { memoryPair = p } })
+setKeypairStore({ get: () => memoryPair, set: (/** @type {any} */ p) => { memoryPair = p } })
 
 /**
  * @typedef {{ id: string, text: string, from: string, mine: boolean, at: number }} Msg

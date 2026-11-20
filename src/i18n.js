@@ -12,21 +12,21 @@ const STRINGS = {
     homeHint: 'Hasta 3 letras o números. Cada mensaje se borra a los 60 segundos.',
     connecting: 'Conectando…',
     offline: 'Sin conexión. Reintentando…',
-    online: (n) => (n === 1 ? '1 conectado' : `${n} conectados`),
+    online: (/** @type {number} */ n) => (n === 1 ? '1 conectado' : `${n} conectados`),
     composer: 'Escribe un mensaje',
     send: 'Enviar',
     empty: 'Nada por aquí. Lo que se escriba dura 60 segundos.',
     otherChannel: 'Otro canal',
-    notDelivered: (n) => (n === 1 ? 'No le llegó a 1 persona.' : `No les llegó a ${n} personas.`),
+    notDelivered: (/** @type {number} */ n) => (n === 1 ? 'No le llegó a 1 persona.' : `No les llegó a ${n} personas.`),
     oldVersion: 'Alguien en el canal usa otra versión de Efimeral; puede que no se lean bien.',
     error: 'No se pudo conectar.',
-    joinedAlert: (n) => `Entró alguien. Ahora hay ${n} conectados. Revisa antes de enviar.`,
+    joinedAlert: (/** @type {number} */ n) => `Entró alguien. Ahora hay ${n} conectados. Revisa antes de enviar.`,
     ack: 'Entendido',
-    joinedLine: (n) => `Entró alguien · ${n} conectados`,
-    leftLine: (n) => (n === 1 ? 'Salió alguien · solo tú' : `Salió alguien · ${n} conectados`),
+    joinedLine: (/** @type {number} */ n) => `Entró alguien · ${n} conectados`,
+    leftLine: (/** @type {number} */ n) => (n === 1 ? 'Salió alguien · solo tú' : `Salió alguien · ${n} conectados`),
     copy: 'Copiar',
     copyFailed: 'No se pudo copiar.',
-    resend: (n) => (n === 1 ? 'Reenviar a 1 nuevo' : `Reenviar a ${n} nuevos`),
+    resend: (/** @type {number} */ n) => (n === 1 ? 'Reenviar a 1 nuevo' : `Reenviar a ${n} nuevos`),
   },
   en: {
     channelLabel: 'Channel',
@@ -37,21 +37,21 @@ const STRINGS = {
     homeHint: 'Up to 3 letters or digits. Every message is deleted after 60 seconds.',
     connecting: 'Connecting…',
     offline: 'Offline. Retrying…',
-    online: (n) => (n === 1 ? '1 online' : `${n} online`),
+    online: (/** @type {number} */ n) => (n === 1 ? '1 online' : `${n} online`),
     composer: 'Write a message',
     send: 'Send',
     empty: 'Nothing here. Whatever is written lasts 60 seconds.',
     otherChannel: 'Another channel',
-    notDelivered: (n) => (n === 1 ? '1 person did not get it.' : `${n} people did not get it.`),
+    notDelivered: (/** @type {number} */ n) => (n === 1 ? '1 person did not get it.' : `${n} people did not get it.`),
     oldVersion: 'Someone in this channel runs another version of Efimeral; you may not read each other well.',
     error: 'Could not connect.',
-    joinedAlert: (n) => `Someone joined. There are now ${n} online. Check before sending.`,
+    joinedAlert: (/** @type {number} */ n) => `Someone joined. There are now ${n} online. Check before sending.`,
     ack: 'Got it',
-    joinedLine: (n) => `Someone joined · ${n} online`,
-    leftLine: (n) => (n === 1 ? 'Someone left · only you' : `Someone left · ${n} online`),
+    joinedLine: (/** @type {number} */ n) => `Someone joined · ${n} online`,
+    leftLine: (/** @type {number} */ n) => (n === 1 ? 'Someone left · only you' : `Someone left · ${n} online`),
     copy: 'Copy',
     copyFailed: 'Could not copy.',
-    resend: (n) => (n === 1 ? 'Resend to 1 new' : `Resend to ${n} new`),
+    resend: (/** @type {number} */ n) => (n === 1 ? 'Resend to 1 new' : `Resend to ${n} new`),
   },
 }
 
@@ -79,5 +79,5 @@ export function setLang (l) {
  */
 export function t (key, ...args) {
   const v = STRINGS[lang][key]
-  return typeof v === 'function' ? v(...args) : v
+  return typeof v === 'function' ? /** @type {(...a: any[]) => string} */ (v)(...args) : v
 }
